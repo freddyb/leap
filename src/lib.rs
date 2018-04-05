@@ -22,10 +22,11 @@ pub fn strip(tostrip: &str) -> String {
     let result: String = tostrip
         .chars()
         .filter(move |cur| {
-            println!("char {:?}, state: {:?}", cur, parser.state);
-            // state machine -.-
             match parser.state {
-                ParserState::Text if *cur == '\x03' => { parser.state = ParserState::ColorCode; false }
+                ParserState::Text if *cur == '\x03' => {
+                    parser.state = ParserState::ColorCode;
+                    false
+                },
                 ParserState::Text => !(*cur == '\x02' ||  *cur == '\x1F' || *cur =='\x16' || *cur == '\x0F'),
                 ParserState::ColorCode if  (*cur).is_digit(10) => {
                     parser.state = ParserState::Foreground1;
@@ -44,7 +45,6 @@ pub fn strip(tostrip: &str) -> String {
                     false
                 },
                 ParserState::Comma if ((*cur).is_digit(10)) => {
-
                     parser.state = ParserState::Background1;
                     false
                 },
@@ -54,7 +54,6 @@ pub fn strip(tostrip: &str) -> String {
                 }
                 _ => true
             }
-
         })
         .collect();
 
