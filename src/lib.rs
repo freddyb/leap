@@ -21,36 +21,37 @@ pub fn strip(tostrip: &str) -> String {
         .filter(move |cur| {
             println!("char {:?}, state: {:?}", cur, parser.state);
             // state machine -.-
-            if parser.state == ParserState::Text {
-                if *cur == '\x03' {
-                    parser.state = ParserState::ColorCode;
-                    return false; // rm color code
-                } else {
-                    return !(*cur == '\x02' || // bold
-                    *cur == '\x1F' || // underline
-                    *cur =='\x16' || // reverse
-                    *cur == '\x0F');
+            match parser.state {
+                ParserState::Text if *cur == '\x03' => { parser.state = ParserState::ColorCode; false }
+                ParserState::Text => !(*cur == '\x02' ||  *cur == '\x1F' || *cur =='\x16' || *cur == '\x0F'),
+                ParserState::ColorCode if  (*cur).is_digit(10) => {
+                    parser.state = ParserState::Foreground1;
+                    false
+                },
+                ParserState::Foreground1 if (*cur).is_digit(6) => {
+                    parser.state = ParserState::Foreground2;
+                    false
+                },
+                ParserState::Foreground1 if *cur == ','  => {
+                    parser.state = ParserState::Comma;
+                    false
+                },
+                ParserState::Foreground2 if *cur == ',' => {
+                    parser.state = ParserState::Comma;
+                    false
+                },
+                ParserState::Comma if ((*cur).is_digit(10)) => {
+
+                    parser.state = ParserState::Background1;
+                    false
+                },
+                ParserState::Background1 if (*cur).is_digit(6) => {
+                    parser.state = ParserState::Text;
+                    false
                 }
-            } else if parser.state == ParserState::ColorCode && (*cur).is_digit(10) {
-                parser.state = ParserState::Foreground1;
-                return false;
-            } else if parser.state == ParserState::Foreground1 && (*cur).is_digit(6) {
-                parser.state = ParserState::Foreground2;
-                return false;
-            } else if parser.state == ParserState::Foreground1 && *cur == ',' {
-                parser.state = ParserState::Comma;
-                return false;
-            } else if parser.state == ParserState::Foreground2 && *cur == ',' {
-                parser.state = ParserState::Comma;
-                return false;
-            } else if parser.state == ParserState::Comma && (*cur).is_digit(10) {
-                parser.state = ParserState::Background1;
-                return false;
-            } else if parser.state == ParserState::Background1 && (*cur).is_digit(6) {
-                parser.state = ParserState::Text;
-                return false;
+                _ => true
             }
-            return true;
+
         })
         .collect();
 
