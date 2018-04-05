@@ -27,7 +27,7 @@ pub fn strip(tostrip: &str) -> String {
                     parser.state = ParserState::ColorCode;
                     false
                 },
-                ParserState::Text => !(*cur == '\x02' ||  *cur == '\x1F' || *cur =='\x16' || *cur == '\x0F'),
+                ParserState::Text => !['\x02', '\x1F', '\x16', '\x0F'].contains(cur),
                 ParserState::ColorCode if  (*cur).is_digit(10) => {
                     parser.state = ParserState::Foreground1;
                     false
